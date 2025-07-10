@@ -1,142 +1,70 @@
 import streamlit as st
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import random
+import numpy as np
+import tensorflow as tf
 
-# ===== 🎨 STYLING & BACKGROUND =====
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background-image: url("https://anatomy.app/Media/videos/heartturntableml1080x1080_20240110114947_preview_medium.jpg");
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }}
-    .block-container {{
-        background-color: rgba(255,255,255,0.9);
-        padding: 2rem 4rem;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }}
-    .stButton>button {{
-        background-color: #0077b6;
-        color: white;
-        border-radius: 8px;
-        padding: 0.5em 1em;
-        font-size: 16px;
-    }}
-    .stButton>button:hover {{
-        background-color: #023e8a;
-        color: #fff;
-    }}
-    .main-title {{
-        font-size: 40px;
-        color: #023e8a;
-        font-weight: bold;
-    }}
-    .sub-title {{
-        font-size: 24px;
-        color: #0077b6;
-        font-weight: bold;
-        margin-top: 30px;
-        margin-bottom: 10px;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# تحميل الموديل
+model = tf.keras.models.load_model("mlp_model_heart_attack.keras")
 
-# ===== 🩺 TITRE =====
-st.markdown('<div class="main-title">🩺 Application Médicale : Analyse & Prédiction</div>', unsafe_allow_html=True)
-st.markdown("---")
+# إعدادات الصفحة
+st.set_page_config(page_title="Heart Attack Risk Predictor", layout="wide")
 
-# ===== TABS =====
-tab1, tab2 = st.tabs(["📊 Visualisation du Dataset", "🔍 Prédiction Patient"])
+# 🔧 تعيين خلفية عبر رابط صورة
+def set_background_url(url):
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("https://img.freepik.com/free-photo/view-graphic-3d-heart_23-2150849187.jpg?semt=ais_hybrid&w=740");
+            background-size: cover;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-# ========================
-# === 1. VISUALISATION ===
-# ========================
-with tab1:
-    st.markdown('<div class="sub-title">📁 Charger votre dataset médical (CSV)</div>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("Uploader un fichier CSV", type=["csv"])
+# 🌄 خلفية عامة للموقع
+set_background_url("https://images.unsplash.com/photo-1588776814546-bb4f3a601b86")  # خلفية طبية مثلاً
 
-    if uploaded_file is not None:
-        try:
-            data = pd.read_csv(uploaded_file)
-            st.success("✅ Fichier chargé avec succès.")
-            
-            # Aperçu
-            st.markdown('<div class="sub-title">🧾 Aperçu des données</div>', unsafe_allow_html=True)
-            st.dataframe(data.head())
+# 🔶 العنوان الرئيسي
+st.markdown("<h1 style='text-align: center; color: white;'>💓 Heart Attack Risk Predictor</h1>", unsafe_allow_html=True)
+st.markdown("<h4 style='text-align: center; color: #f0f0f0;'>Enter patient data below to assess risk</h4>", unsafe_allow_html=True)
 
-            # Graphique
-            st.markdown('<div class="sub-title">📈 Distribution d\'une variable</div>', unsafe_allow_html=True)
-            numeric_cols = data.select_dtypes(include=['float64', 'int64']).columns
-            if len(numeric_cols) > 0:
-                col_to_plot = st.selectbox("Choisir une variable :", numeric_cols)
-                fig1, ax1 = plt.subplots()
-                sns.histplot(data[col_to_plot], kde=True, ax=ax1)
-                st.pyplot(fig1)
+# 📋 فورم الإدخال
+with st.form(key="predict_form"):
+    st.subheader("🔢 Patient Data")
+    col1, col2 = st.columns(2)
 
-            # Corrélation
-            st.markdown('<div class="sub-title">🔍 Matrice de corrélation</div>', unsafe_allow_html=True)
-            fig2, ax2 = plt.subplots(figsize=(10, 6))
-            sns.heatmap(data.corr(numeric_only=True), annot=True, cmap="coolwarm", ax=ax2)
-            st.pyplot(fig2)
+    with col1:
+        age = st.slider("Age", 20, 100, 50)
+        cholesterol = st.number_input("Cholesterol Level", value=200)
+        trtbps = st.number_input("Resting Blood Pressure", value=130)
 
-        except Exception as e:
-            st.error(f"Erreur : {e}")
+    with col2:
+        thalachh = st.number_input("Max Heart Rate Achieved", value=150)
+        oldpeak = st.number_input("Oldpeak (ST depression)", value=1.0, format="%.1f")
+        cp = st.selectbox("Chest Pain Type", [0, 1, 2, 3])
+    
+    submit = st.form_submit_button("🧠 Predict Risk")
+
+# ⚙️ الحساب والتوقع
+if submit:
+    input_data = np.array([[age, trtbps, cholesterol, thalachh, oldpeak, cp]])
+    prediction = model.predict(input_data)
+    risk_score = prediction[0][0]
+
+    st.markdown("---")
+    st.markdown(
+        f"<h2 style='color: #00ffcc;'>🩺 Predicted Heart Attack Risk: <strong>{risk_score:.2f}</strong></h2>",
+        unsafe_allow_html=True
+    )
+
+    if risk_score > 0.5:
+        st.error("⚠️ High Risk — Please consult a doctor.")
     else:
-        st.info("Veuillez uploader un fichier CSV pour visualiser les données.")
+        st.success("✅ Low Risk — Keep up the healthy lifestyle!")
 
-# ========================
-# === 2. PREDICTION ======
-# ========================
-with tab2:
-    st.markdown('<div class="sub-title">🧾 Remplir les données du patient</div>', unsafe_allow_html=True)
-
-    with st.form("formulaire"):
-        age = st.number_input("Âge", 0, 120, 55)
-        gender = st.selectbox("Genre", ["Homme", "Femme"])
-        heart_rate = st.number_input("Fréquence cardiaque (bpm)", 30, 200, 75)
-        systolic = st.number_input("Tension systolique", 50, 250, 120)
-        diastolic = st.number_input("Tension diastolique", 30, 150, 80)
-        blood_sugar = st.number_input("Taux de sucre (mg/dL)", 50, 500, 110)
-        ckmb = st.number_input("CK-MB (U/L)", 0.0, 100.0, 18.0)
-        troponin = st.number_input("Troponine (ng/mL)", 0.0, 100.0, 0.4)
-
-        submitted = st.form_submit_button("🔍 Lancer la prédiction")
-
-    if submitted:
-        # Simulation de prédiction (à remplacer par modèle réel)
-        prediction = random.choice(["Positif", "Négatif"])
-        confidence = random.randint(70, 99)
-
-        st.markdown('<div class="sub-title">🧪 Résultat</div>', unsafe_allow_html=True)
-        if prediction == "Positif":
-            st.error(f"🚨 Résultat : **{prediction}**")
-        else:
-            st.success(f"✅ Résultat : **{prediction}**")
-
-        st.markdown(f"🎯 Score de confiance : **{confidence}%**")
-        st.progress(confidence / 100)
-
-        if prediction == "Positif" and confidence < 90:
-            st.warning("⚠️ Ce résultat nécessite une validation médicale.")
-
-        st.markdown('<div class="sub-title">🩺 Actions médicales possibles</div>', unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-
-        with col1:
-            if st.button("✅ Valider le diagnostic"):
-                st.success("✅ Diagnostic validé")
-            if st.button("📅 Programmer un suivi"):
-                st.info("📅 Suivi médical programmé")
-
-        with col2:
-            if st.button("🧪 Ajouter examens complémentaires"):
-                st.info("🧪 Examen complémentaire recommandé")
-            if st.button("❌ Marquer comme faux positif"):
-                st.warning("🔁 Signalé pour vérification")
+# 🔻 التذييل
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: white;'>© 2025 HeartCare AI | All rights reserved.</p>", unsafe_allow_html=True)
