@@ -5,17 +5,16 @@ import tempfile
 import os
 from pathlib import Path
 
-# إعداد صفحة Streamlit
+# إعداد الواجهة
 st.set_page_config(page_title="Heart Risk Predictor", layout="wide")
 st.title("💓 Heart Attack Risk Predictor")
 
-# رفع الموديل من طرف المستخدم
+# تحميل الموديل من طرف المستخدم
 uploaded_model = st.file_uploader("🔼 Upload your model (.keras, .h5, .pb)", type=["keras", "h5", "pb"])
 
 model = None
 loaded_model_type = None
 
-# تحميل الموديل
 if uploaded_model is not None:
     try:
         suffix = Path(uploaded_model.name).suffix
@@ -25,7 +24,8 @@ if uploaded_model is not None:
                 f.write(uploaded_model.read())
 
             if suffix in [".keras", ".h5"]:
-                model = tf.keras.models.load_model(file_path)
+                # ✅ أهم تعديل هنا
+                model = tf.keras.models.load_model(file_path, compile=False)
                 loaded_model_type = "keras"
 
             elif suffix == ".pb":
@@ -41,7 +41,7 @@ if uploaded_model is not None:
     except Exception as e:
         st.error(f"❌ Error loading model: {e}")
 
-# إذا تم تحميل الموديل
+# إذا تم تحميل الموديل بنجاح
 if model is not None and loaded_model_type:
     with st.form("prediction_form"):
         st.subheader("🔢 Patient Data Input")
@@ -62,7 +62,7 @@ if model is not None and loaded_model_type:
         submit = st.form_submit_button("🧠 Predict")
 
     if submit:
-        # إدخال البيانات بالترتيب الصحيح (8 خصائص)
+        # ✅ ترتيب البيانات لازم يكون مطابق للتدريب
         input_data = np.array([[age, sex, cp, trtbps, cholesterol, fbs, thalachh, oldpeak]], dtype=np.float32)
 
         try:
@@ -84,6 +84,5 @@ if model is not None and loaded_model_type:
 
         except Exception as e:
             st.error(f"❌ Error during prediction: {e}")
-
 else:
     st.info("📂 Please upload a model file to get started.")
