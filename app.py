@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 # إعداد الواجهة
-st.set_page_config(page_title="Heart Risk Predictor", layout="wide")
+st.set_page_config(page_title="Heart Risk Predictor test", layout="wide")
 st.title("💓 Heart Attack Risk Predictor")
 
 # تحميل الموديل من طرف المستخدم
