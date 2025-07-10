@@ -6,11 +6,11 @@ import os
 from pathlib import Path
 
 # إعداد الواجهة
-st.set_page_config(page_title="Heart Risk Predictor test", layout="wide")
+st.set_page_config(page_title="Heart Risk Predictor test yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy", layout="wide")
 st.title("💓 Heart Attack Risk Predictor")
 
 # تحميل الموديل من طرف المستخدم
-uploaded_model = st.file_uploader("🔼 Upload your model (.keras, .h5, .pb)", type=["keras", "h5", "pb"])
+uploaded_model = st.file_uploader("🔼 Upload your model abnaaaaaadem (.keras, .h5, .pb)", type=["keras", "h5", "pb"])
 
 model = None
 loaded_model_type = None
